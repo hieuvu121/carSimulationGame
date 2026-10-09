@@ -1,0 +1,11 @@
+# Python 3.12 (64-bit) ONLY. Verify: python -c "import struct,sys; print(struct.calcsize('P')*8, sys.version)"
+mediapipe==0.10.21
+opencv-contrib-python==4.11.0.86
+numpy==1.26.4
+scikit-learn==1.6.1
+scipy==1.17.1
+joblib==1.4.2
+pygame==2.6.1
+matplotlib==3.11.2
+protobuf==4.25.9
+pytest==8.3.5

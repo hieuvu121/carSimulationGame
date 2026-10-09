@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor (keep shared workspace settings only)
+.vscode/*
+!.vscode/settings.json
+
+# OS
+.DS_Store

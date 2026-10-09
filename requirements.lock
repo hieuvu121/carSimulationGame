@@ -1,0 +1,36 @@
+# Full environment lock: pip freeze after 'pip install -r requirements.txt' in a clean 64-bit Python 3.12 venv.
+# Install with: pip install -r requirements.lock   (see docs/interfaces.md §3.1)
+# Verified: macOS arm64, Python 3.12.14. Windows verification: PENDING (Lead, Iteration 1).
+absl-py==2.5.0
+attrs==26.1.0
+cffi==2.1.1
+contourpy==1.3.3
+cycler==0.12.1
+flatbuffers==25.12.19
+fonttools==4.66.1
+iniconfig==2.3.1
+jax==0.7.1
+jaxlib==0.7.1
+joblib==1.4.2
+kiwisolver==1.5.1
+matplotlib==3.11.2
+mediapipe==0.10.21
+ml_dtypes==0.5.4
+numpy==1.26.4
+opencv-contrib-python==4.11.0.86
+opt_einsum==3.4.0
+packaging==26.3
+pillow==12.3.0
+pluggy==1.6.0
+protobuf==4.25.9
+pycparser==3.1
+pygame==2.6.1
+pyparsing==3.3.3
+pytest==8.3.5
+python-dateutil==2.9.0.post0
+scikit-learn==1.6.1
+scipy==1.17.1
+sentencepiece==0.2.2
+six==1.17.0
+sounddevice==0.5.6
+threadpoolctl==3.7.0
