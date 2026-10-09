@@ -1,4 +1,14 @@
+# Technical Notes Template
 
+Part of the design docs — start at [DESIGN.md](../DESIGN.md) for the index.
+
+---
+
+## 14. Technical notes template
+
+Each person copies this into `docs/notes/<name>.md` (`triet.md`, `uy.md`, `shobita.md`, `siri.md`, `evan.md`). The notes are written during Iteration 5 and reviewed by the Lead. They feed 1–2 slides per person.
+
+```markdown
 # <Name> – <role, e.g. Hand tracking> — Technical notes
 Author: <name>   |   Files owned: <list>   |   Requirement IDs: <e.g. HT.1–HT.4, R3, R4>
 
@@ -26,19 +36,4 @@ Honest list (2–4 bullets).
 
 ## 7. Slide summary (max 40 words + 1 figure)
 The exact text and figure to put on the slide.
-
-
-## 8. MileStone
-10/10/2026
-Iteration 1:
-Triet — webcam + MediaPipe verification passed on Windows using 64-bit Python 3.12.10, MediaPipe 0.10.21 and OpenCV 4.11.0. The check script successfully captured my hand and printed 21 landmarks. Output attached below.
-Please check carSimulationGame/src/capture/check/check_hand.py
-
-Triet — camera FPS check completed. Bright: 29.94 FPS; dim: 29.96 FPS. Each measurement ran for approximately 10 seconds after 30 warm-up frames. My camera maintained approximately 30 FPS in both conditions, so I did not observe the expected dim-light slowdown.
-Please check carSimulationGame/src/capture/check/check_fps.py
-
-
-
 ```
-
-
