@@ -1,6 +1,21 @@
 
+```markdown
 # <Name> – <role, e.g. Hand tracking> — Technical notes
 Author: <name>   |   Files owned: <list>   |   Requirement IDs: <e.g. HT.1–HT.4, R3, R4>
+
+e
+## 0. Ref
+Hand-Tracked Car Game — SabarishCodeWizard
+https://github.com/SabarishCodeWizard/Hand-Tracked-Car-Game-using-Pygame-and-MediaPipe/blob/main/car.py
+
+| Part | SabarishCodeWizard implementation | This project |
+|---|---|---|
+| Webcam capture | Reads frames inside the game loop. | `Camera` captures in a background thread and stores the latest frame |
+| Hand detection | Uses MediaPipe, converts BGR → RGB, and draws landmarks. | `HandTracker.detect()` and `draw()` perform similar operations, with validation and a structured result. |
+| Coordination | Uses **index fingertip’s x/y position** | `preprocess()` normalizes **all 21 landmarks** into **63 features** of the hand, the hand is the centre position |
+| Car controls | The car follows the fingertip| This project design specifies **fist → left lane, V sign → right lane, open palm → pause**, using an SVM classifier. |
+| Code organization | Capture, tracking, and gameplay are together in `car.py`. | Separate modules handle capture, landmarks, preprocessing, classification, and gameplay based on this project specification |
+
 
 ## 1. What it does (3–5 sentences)
 
@@ -82,12 +97,11 @@ preprocess.py
 | Left hand produces mirrored coordinates. | `preprocess()` uses the handedness label to reverse the left hand’s `x` coordinates. | `test_mirrored_left_matches_right` confirms that synthetic mirrored left/right inputs produce matching feature vectors. |
 
 ## 5. Results
-
 | Priority | Result | Evidence file | Interpretation |
 |---|---|---|---|
-| **[Must]** Automated tests | **55/55 passed (100%)**: 25 camera, 8 landmarks, 22 preprocessing | [Test report](../../results/triet-tests.xml) | All 55 tests in the refreshed report passed, with no failures or errors. |
-| **[Must]** Bright versus dim FPS | Bright: **30.07 FPS**, 301 frames; dim: **29.94 FPS**, 300 frames | [Bright measurements](../../results/triet-fps-bright.txt), [dim measurements](../../results/triet-fps-dim.txt) | Both runs measured approximately 30 FPS under the tested lighting conditions. |
-| **[Must]** Live webcam verification | Landmarks and **63 features** displayed; mirroring, no-hand recovery, and shutdown manually confirmed; increasing frame numbers and timestamps logged | [Preview log](../../results/triet-preview-log.txt), [manual observations](../../results/triet-webcam-check.txt) | The log supports the frame-timing checks; the observation note records Triet's earlier visual confirmations. |
+| **[Must]** Automated tests | **55/55 passed (100%)**: 25 camera, 8 landmarks, 22 preprocessing | [Test report](../../results/triet-tests.xml) | All checks in the saved test run passed. |
+| **[Must]** Bright versus dim FPS | Bright: **30.07 FPS**, 301 frames; dim: **29.94 FPS**, 300 frames | [Bright results](../../results/triet-fps-bright.txt), [dim results](../../results/triet-fps-dim.txt) | Both runs measured approximately 30 FPS under the tested lighting conditions. |
+| **[Must]** Live webcam verification | Landmarks and **63 features** displayed; mirroring, no-hand recovery, and shutdown manually confirmed; increasing frame numbers and timestamps logged | [Preview log](../../results/triet-preview-log.txt), [manual observations](../../results/triet-webcam-check.txt) | The log supports the frame-timing checks, while the observation note records my earlier visual confirmations. |
 
 
 ## 6. Limitations & future work
@@ -101,12 +115,48 @@ This component turns live webcam images into hand-coordinate data for the gestur
 `landmarks.py` uses MediaPipe to detect detect 21 landmarks of the hand and draw the landmarks on the preview.
 `preprocess.py` normalises these coordinates into 63 features for model training and live gesture prediction.
 
-
+**Challenge:**
 Note: We must include the evidence 
-
 | Challenge | What we implemented | 
 |---|---|
 | Two visible hands create ambiguity about which hand should control the game. | Set `MP_MAX_NUM_HANDS = 1` and made `detect()` return only the first detected hand. | 
-| Left hand produces mirrored coordinates. | `preprocess()` uses the handedness label to reverse the left hand’s `x` coordinates. | `test_mirrored_left_matches_right` confirms that synthetic mirrored left/right inputs produce matching feature vectors. |
+| Left hand produces mirrored coordinates. | `preprocess()` uses the handedness label to reverse the left hand’s `x` coordinates. | 
+
+![Challenge](<../../img/Screenshot 2026-10-11 170016.png>)
 
 
+
+
+**Results of testing**
+
+**Automated tests**
+
+**55/55 passed (100%)**: 25 camera, 8 landmarks, 22 preprocessing.
+
+![Automated tests](../../img/a.png)
+
+**Bright versus dim FPS**
+
+Bright: **30.07 FPS**, 301 frames; dim: **29.94 FPS**, 300 frames.
+
+![Bright versus dim FPS](<../../img/Screenshot 2026-10-11 170138.png>)
+
+![Bright versus dim FPS](<../../img/Screenshot 2026-10-11 170212.png>)
+
+**Live webcam verification**
+
+Landmarks and **63 features** displayed; mirroring, no-hand recovery, and shutdown manually confirmed; increasing frame numbers and timestamps logged.
+
+![Live webcam verification](<../../img/Screenshot 2026-10-11 170344.png>)
+
+
+
+
+
+**Limitation**
+Single-hand control: When both hands are visible, the selected hand may change. Future work could add an explicit hand-selection rule.
+Limited device testing: Current webcam evidence comes from my webcam. Repeat verification on other laptops, including macOS.
+Full-system testing: These checks cover capture, landmarks, and preprocessing. Gesture accuracy and response time still require testing with the classifier and game.
+
+
+```
