@@ -186,3 +186,8 @@ def _draw_dim(surface: pygame.Surface) -> None:
 def _draw_centered(surface: pygame.Surface, text: str, size: int,
                    colour: tuple[int, int, int], offset: int = 0) -> None:
     """Draw ``text`` centred in the window, ``offset`` pixels below the middle."""
+    rendered = _font(size).render(text, True, colour)
+    surface.blit(
+        rendered,
+        rendered.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + offset)),
+    )

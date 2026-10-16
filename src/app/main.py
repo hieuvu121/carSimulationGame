@@ -18,7 +18,7 @@ from src.app.mock_classifier import KeyboardState, MockCamera, MockClassifier, M
 from src.app.worker import GestureWorker
 from src.capture.camera import Camera
 from src.capture.landmarks import HandTracker
-from src.config import (LOW_FPS_WARNING, MAX_DT, MODEL_PATH, PREVIEW_SIZE, RESULTS_DIR,
+from src.config import (HUD_HEIGHT, LOW_FPS_WARNING, MAX_DT, MODEL_PATH, PREVIEW_SIZE, RESULTS_DIR,
                         SHOW_CAMERA_PREVIEW, TARGET_FPS, WINDOW_HEIGHT, WINDOW_WIDTH)
 from src.game.controller import GameController
 from src.game.states import GameState
@@ -58,28 +58,26 @@ def _keyboard(controller, key):
         controller.restart()
 
 
-def _status(surface, font, controller, observation, worker, camera, args, last_action):
-    """Make stub behaviour observable without changing Uy's game implementation."""
-    lines = [f"State: {controller.state.value} | score: {controller.score}",
-             f"Classifier: {args.classifier} | camera: {args.camera}"]
-    if hasattr(controller, "calls") and hasattr(controller, "lane"):
-        lines += ["TEMPORARY CONTROLLER: no obstacles/collisions", f"Lane: {controller.lane} (0=left, 2=right)"]
-    if observation is None:
-        lines.append("Waiting for the first prediction...")
-    else:
-        lines += [f"Raw: {observation.token} | confidence: {observation.confidence:.2f}",
-                  f"Stable: {observation.stable} | hand: {observation.hand_present}"]
+def _status(surface, font, controller, observation, worker, camera, args, last_action, show_debug):
+    """Compact translucent diagnostics below the game HUD; D toggles it."""
+    top = HUD_HEIGHT
     fps = worker.fps
-    lines += [f"Camera FPS: {camera.fps:.1f} | worker FPS: {fps:.1f}",
-              f"Last changed action: {last_action}",
-              "1=fist  2=V sign  3=palm  H=no hand (mock)",
-              "Arrows=steer  P=pause/resume  R=restart  Esc=quit"]
-    panel = pygame.Surface((WINDOW_WIDTH, len(lines)*23+12))
-    panel.fill((18, 23, 31))
-    for i, line in enumerate(lines):
-        color = (255, 180, 70) if "FPS" in line and fps < LOW_FPS_WARNING else (235, 240, 245)
-        panel.blit(font.render(line, True, color), (8, 6+i*23))
-    surface.blit(panel, (0, 0))
+    if show_debug:
+        if observation is None:
+            seen = "waiting for the first prediction..."
+        else:
+            seen = f"raw {observation.token} {observation.confidence:.2f} | stable {observation.stable}"
+        lines = [f"{controller.state.value} | lane {controller.lane} | {seen}",
+                 f"camera {camera.fps:.0f} FPS | worker {fps:.0f} FPS | last: {last_action}",
+                 "D=hide debug  Arrows=steer  P=pause  R=restart  Esc=quit"
+                 + ("  1/2/3/H=mock" if args.classifier == "mock" else "")]
+        panel = pygame.Surface((WINDOW_WIDTH, len(lines)*18+8), pygame.SRCALPHA)
+        panel.fill((18, 23, 31, 170))
+        for i, line in enumerate(lines):
+            color = (255, 180, 70) if "FPS" in line and fps < LOW_FPS_WARNING else (235, 240, 245)
+            panel.blit(font.render(line, True, color), (8, 4+i*18))
+        surface.blit(panel, (0, top))
+        top += panel.get_height()
     # This is a copied camera frame, so rendering cannot mutate worker input.
     if SHOW_CAMERA_PREVIEW and not args.no_preview:
         frame = camera.latest()
@@ -87,7 +85,7 @@ def _status(surface, font, controller, observation, worker, camera, args, last_a
             rgb = cv2.cvtColor(frame.image.copy(), cv2.COLOR_BGR2RGB)
             rgb = cv2.resize(rgb, PREVIEW_SIZE)
             preview = pygame.surfarray.make_surface(rgb.swapaxes(0, 1))
-            surface.blit(preview, (WINDOW_WIDTH-PREVIEW_SIZE[0]-8, panel.get_height()+8))
+            surface.blit(preview, (WINDOW_WIDTH-PREVIEW_SIZE[0]-8, top+8))
 
 
 def run(args):
@@ -97,8 +95,8 @@ def run(args):
         camera, factory, classifier = build_components(args, keys)
         pygame.init()
         surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        pygame.display.set_caption("Gesture car integration")
-        font = pygame.font.Font(None, 21)
+        pygame.display.set_caption("Gesture car")
+        font = pygame.font.Font(None, 19)
         clock = pygame.time.Clock()
         controller = GameController()
         path = RESULTS_DIR / f"latency_{datetime.now():%Y%m%d-%H%M%S-%f}.csv" if args.log_latency else None
@@ -106,18 +104,19 @@ def run(args):
         if path:
             print(f"Latency CSV: {path}")
         print(f"Running camera={args.camera}, classifier={args.classifier}. Esc quits.")
-        if hasattr(controller, "calls"):
-            print("Temporary game controller: lane/state testing only; no obstacles or collisions.")
         worker = GestureWorker(camera, factory, classifier)
         worker.start()
         started = time.perf_counter()
         last_action = "none"
+        show_debug = True
         running = True
         while running:
             dt = min(clock.tick(TARGET_FPS)/1000, MAX_DT)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                    show_debug = not show_debug
                 elif event.type == pygame.KEYDOWN:
                     _keyboard(controller, event.key)
             keys.update(pygame.key.get_pressed())
@@ -138,8 +137,8 @@ def run(args):
                     last_action = action.value
                     print(f"{event.token} -> {action.value} | state={controller.state.value}")
             controller.update(dt)
-            controller.render(surface)
-            _status(surface, font, controller, observation, worker, camera, args, last_action)
+            controller.render(surface, fps=worker.fps)
+            _status(surface, font, controller, observation, worker, camera, args, last_action, show_debug)
             pygame.display.flip()
             if args.duration is not None and time.perf_counter()-started >= args.duration:
                 running = False
